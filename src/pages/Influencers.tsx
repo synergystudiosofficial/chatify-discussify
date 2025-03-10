@@ -4,7 +4,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
-import { fetchData, ApiResponse } from "@/lib/db";
+import { fetchData, insertData, ApiResponse } from "@/lib/db";
 import { Input } from "@/components/ui/input";
 import { 
   Table, 
@@ -37,12 +37,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 interface Influencer {
-  id: number;
+  id?: number;
+  _id?: string;
   name: string;
   category: string;
   followers: string;
   engagement: string;
   status: string;
+  mobile?: string;
+  email?: string;
+  instagramId?: string;
 }
 
 interface InfluencersData {
@@ -81,49 +85,68 @@ export default function Influencers() {
 
   useEffect(() => {
     const loadInfluencersData = async () => {
+      setLoading(true);
       const response = await fetchData<InfluencersData>("influencers");
       if (response.success) {
         setInfluencersData(response.data);
+      } else {
+        toast({
+          title: "Error",
+          description: response.error || "Failed to load influencers data.",
+          variant: "destructive",
+        });
       }
       setLoading(false);
     };
     
     loadInfluencersData();
-  }, []);
+  }, [toast]);
 
   const filteredInfluencers = influencersData?.influencers.filter(
     (influencer) => influencer.name.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
-  const handleAddInfluencer = (data: InfluencerFormValues) => {
-    // In a real app, this would send the data to your API
-    console.log("New influencer data:", data);
+  const handleAddInfluencer = async (data: InfluencerFormValues) => {
+    // Prepare the new influencer data
+    const newInfluencer: Influencer = {
+      name: data.name,
+      mobile: data.mobile,
+      email: data.email,
+      instagramId: data.instagramId,
+      category: data.category,
+      followers: "0", // New influencers start with 0 followers
+      engagement: "0%", // New influencers start with 0% engagement
+      status: "Active",
+    };
     
-    // Simulate adding a new influencer to the list
-    if (influencersData) {
-      const newInfluencer: Influencer = {
-        id: influencersData.influencers.length + 1,
-        name: data.name,
-        category: data.category,
-        followers: "0", // New influencers start with 0 followers
-        engagement: "0%", // New influencers start with 0% engagement
-        status: "Active",
-      };
+    // Insert the new influencer to MongoDB
+    const response = await insertData<Influencer>("influencers", newInfluencer);
+    
+    if (response.success) {
+      // Update the local state with the new influencer
+      if (influencersData) {
+        setInfluencersData({
+          influencers: [...influencersData.influencers, response.data]
+        });
+      }
       
-      setInfluencersData({
-        influencers: [...influencersData.influencers, newInfluencer]
+      // Show success message
+      toast({
+        title: "Influencer Added",
+        description: `${data.name} has been added successfully.`,
+      });
+      
+      // Close the sheet and reset the form
+      setIsSheetOpen(false);
+      form.reset();
+    } else {
+      // Show error message
+      toast({
+        title: "Error",
+        description: response.error || "Failed to add influencer. Please try again.",
+        variant: "destructive",
       });
     }
-    
-    // Show success message
-    toast({
-      title: "Influencer Added",
-      description: `${data.name} has been added successfully.`,
-    });
-    
-    // Close the sheet and reset the form
-    setIsSheetOpen(false);
-    form.reset();
   };
 
   return (

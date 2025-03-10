@@ -1,47 +1,148 @@
-
+import { MongoClient, Collection, Db } from "mongodb";
 import { toast } from "@/components/ui/use-toast";
 
 // Define response interface
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
+  error?: string;
 }
 
-// This would normally be in a secure backend service
-// Connection string stored in a way that's not directly exposed
+// Connection string - in a production environment, this should be in a secure backend
 const CONNECTION_STRING = "mongodb+srv://dev-user:m9P0sg4D2d6M538J@oyecreators-8d327e59.mongo.ondigitalocean.com/oyecreators-lovable?tls=true&authSource=admin&replicaSet=oyecreators";
 
-// Create a simulated API service that would normally connect to MongoDB
-// In a production app, this would be a real backend API
-export async function fetchData<T>(endpoint: string): Promise<ApiResponse<T>> {
+// Create MongoDB client
+let client: MongoClient | null = null;
+let db: Db | null = null;
+
+// Initialize MongoDB connection
+async function connectToDatabase(): Promise<{ client: MongoClient; db: Db } | null> {
+  if (client && db) {
+    return { client, db };
+  }
+  
   try {
-    // In a real app, this would be a fetch to your backend API
-    // that securely connects to MongoDB
-    console.log(`Fetching data from endpoint: ${endpoint}`);
+    if (!client) {
+      client = new MongoClient(CONNECTION_STRING);
+      await client.connect();
+      console.log("Connected to MongoDB successfully");
+    }
     
-    // Simulate network request with mock data (for frontend development)
-    // In production, replace this with actual MongoDB connection logic in a backend service
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          success: true,
-          data: getMockData(endpoint) as T
-        });
-      }, 800);
-    });
+    db = client.db("oyecreators-lovable");
+    return { client, db };
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Failed to connect to MongoDB:", error);
+    toast({
+      title: "Database Error",
+      description: "Failed to connect to the database. Please try again.",
+      variant: "destructive",
+    });
+    return null;
+  }
+}
+
+// Function to fetch data from MongoDB
+export async function fetchData<T>(collectionName: string): Promise<ApiResponse<T>> {
+  try {
+    const connection = await connectToDatabase();
+    if (!connection) {
+      return { success: false, data: [] as unknown as T, error: "Failed to connect to database" };
+    }
+    
+    const { db } = connection;
+    const collection: Collection = db.collection(collectionName);
+    
+    console.log(`Fetching data from collection: ${collectionName}`);
+    
+    // Use try-catch to handle potential MongoDB query errors
+    try {
+      let result;
+      
+      // For demonstration, we're using different queries based on collection name
+      // In a real app, you might want to make this more flexible
+      if (collectionName === "influencers") {
+        result = await collection.find({}).toArray();
+        
+        // If the collection is empty, use mock data for demonstration
+        if (result.length === 0) {
+          console.log("Collection is empty, using mock data");
+          return { success: true, data: getMockData(collectionName) as T };
+        }
+        
+        return { success: true, data: { influencers: result } as unknown as T };
+      } 
+      else if (collectionName === "dashboard") {
+        // For dashboard, we'd typically aggregate data from multiple collections
+        // For now, we'll use mock data for simplicity
+        return { success: true, data: getMockData(collectionName) as T };
+      } 
+      else if (collectionName === "campaigns") {
+        result = await collection.find({}).toArray();
+        
+        // If the collection is empty, use mock data for demonstration
+        if (result.length === 0) {
+          console.log("Collection is empty, using mock data");
+          return { success: true, data: getMockData(collectionName) as T };
+        }
+        
+        return { success: true, data: { campaigns: result } as unknown as T };
+      }
+      else {
+        // Default case
+        result = await collection.find({}).toArray();
+        return { success: true, data: result as unknown as T };
+      }
+    } catch (dbError) {
+      console.error(`Error querying MongoDB collection ${collectionName}:`, dbError);
+      return { 
+        success: false, 
+        data: [] as unknown as T, 
+        error: `Error querying collection: ${(dbError as Error).message}` 
+      };
+    }
+  } catch (error) {
+    console.error("Error in fetchData:", error);
     toast({
       title: "Database Error",
       description: "Failed to fetch data from database. Please try again.",
       variant: "destructive",
     });
-    return { success: false, data: [] as unknown as T };
+    return { success: false, data: [] as unknown as T, error: (error as Error).message };
   }
 }
 
-// Mock data for UI development purposes
-// In production, this would be replaced with actual MongoDB queries
+// Function to insert a new document to MongoDB
+export async function insertData<T>(collectionName: string, data: any): Promise<ApiResponse<T>> {
+  try {
+    const connection = await connectToDatabase();
+    if (!connection) {
+      return { success: false, data: {} as T, error: "Failed to connect to database" };
+    }
+    
+    const { db } = connection;
+    const collection: Collection = db.collection(collectionName);
+    
+    console.log(`Inserting data into collection: ${collectionName}`);
+    
+    const result = await collection.insertOne(data);
+    
+    if (result.acknowledged) {
+      return { success: true, data: { ...data, _id: result.insertedId } as unknown as T };
+    } else {
+      return { success: false, data: {} as T, error: "Failed to insert document" };
+    }
+  } catch (error) {
+    console.error("Error in insertData:", error);
+    toast({
+      title: "Database Error",
+      description: "Failed to add data to database. Please try again.",
+      variant: "destructive",
+    });
+    return { success: false, data: {} as T, error: (error as Error).message };
+  }
+}
+
+// Mock data for UI development or when collections are empty
 function getMockData(endpoint: string) {
   switch (endpoint) {
     case "dashboard":
@@ -78,5 +179,15 @@ function getMockData(endpoint: string) {
       };
     default:
       return [];
+  }
+}
+
+// Function to close the MongoDB connection
+export async function closeConnection() {
+  if (client) {
+    await client.close();
+    client = null;
+    db = null;
+    console.log("MongoDB connection closed");
   }
 }
