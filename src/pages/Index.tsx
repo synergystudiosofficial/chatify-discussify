@@ -1,7 +1,6 @@
-
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchData, ApiResponse } from "@/lib/db";
 import { 
   Table, 
@@ -11,6 +10,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
 
 interface DashboardData {
   totalInfluencers: number;
@@ -28,18 +28,56 @@ interface DashboardData {
 export default function Index() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadDashboardData = async () => {
-      const response = await fetchData<DashboardData>("dashboard");
-      if (response.success) {
-        setDashboardData(response.data);
+      try {
+        setLoading(true);
+        setError(null);
+        console.log("Fetching dashboard data...");
+        const response = await fetchData<DashboardData>("dashboard");
+        console.log("Dashboard response:", response);
+        
+        if (response.success) {
+          setDashboardData(response.data);
+        } else {
+          setError(response.error || "Failed to load dashboard data");
+          toast({
+            title: "Error",
+            description: response.error || "Failed to load dashboard data",
+            variant: "destructive",
+          });
+        }
+      } catch (err) {
+        console.error("Error loading dashboard:", err);
+        setError("An unexpected error occurred");
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     
     loadDashboardData();
-  }, []);
+  }, [toast]);
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <div className="p-4 text-red-500">
+            Error loading dashboard data. Please try again later.
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

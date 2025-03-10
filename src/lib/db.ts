@@ -41,105 +41,20 @@ async function connectToDatabase(): Promise<{ client: MongoClient; db: Db } | nu
   }
 }
 
-// Function to fetch data from MongoDB
+// Function to fetch data - in browser environment, return mock data
 export async function fetchData<T>(collectionName: string): Promise<ApiResponse<T>> {
-  try {
-    const connection = await connectToDatabase();
-    if (!connection) {
-      return { success: false, data: [] as unknown as T, error: "Failed to connect to database" };
-    }
-    
-    const { db } = connection;
-    const collection: Collection = db.collection(collectionName);
-    
-    console.log(`Fetching data from collection: ${collectionName}`);
-    
-    // Use try-catch to handle potential MongoDB query errors
-    try {
-      let result;
-      
-      // For demonstration, we're using different queries based on collection name
-      // In a real app, you might want to make this more flexible
-      if (collectionName === "influencers") {
-        result = await collection.find({}).toArray();
-        
-        // If the collection is empty, use mock data for demonstration
-        if (result.length === 0) {
-          console.log("Collection is empty, using mock data");
-          return { success: true, data: getMockData(collectionName) as T };
-        }
-        
-        return { success: true, data: { influencers: result } as unknown as T };
-      } 
-      else if (collectionName === "dashboard") {
-        // For dashboard, we'd typically aggregate data from multiple collections
-        // For now, we'll use mock data for simplicity
-        return { success: true, data: getMockData(collectionName) as T };
-      } 
-      else if (collectionName === "campaigns") {
-        result = await collection.find({}).toArray();
-        
-        // If the collection is empty, use mock data for demonstration
-        if (result.length === 0) {
-          console.log("Collection is empty, using mock data");
-          return { success: true, data: getMockData(collectionName) as T };
-        }
-        
-        return { success: true, data: { campaigns: result } as unknown as T };
-      }
-      else {
-        // Default case
-        result = await collection.find({}).toArray();
-        return { success: true, data: result as unknown as T };
-      }
-    } catch (dbError) {
-      console.error(`Error querying MongoDB collection ${collectionName}:`, dbError);
-      return { 
-        success: false, 
-        data: [] as unknown as T, 
-        error: `Error querying collection: ${(dbError as Error).message}` 
-      };
-    }
-  } catch (error) {
-    console.error("Error in fetchData:", error);
-    toast({
-      title: "Database Error",
-      description: "Failed to fetch data from database. Please try again.",
-      variant: "destructive",
-    });
-    return { success: false, data: [] as unknown as T, error: (error as Error).message };
-  }
+  console.log(`Fetching data from collection: ${collectionName}`);
+  
+  // In browser environment, always return mock data
+  return { success: true, data: getMockData(collectionName) as T };
 }
 
-// Function to insert a new document to MongoDB
+// Function to insert data - in browser environment, simulate success
 export async function insertData<T>(collectionName: string, data: any): Promise<ApiResponse<T>> {
-  try {
-    const connection = await connectToDatabase();
-    if (!connection) {
-      return { success: false, data: {} as T, error: "Failed to connect to database" };
-    }
-    
-    const { db } = connection;
-    const collection: Collection = db.collection(collectionName);
-    
-    console.log(`Inserting data into collection: ${collectionName}`);
-    
-    const result = await collection.insertOne(data);
-    
-    if (result.acknowledged) {
-      return { success: true, data: { ...data, _id: result.insertedId } as unknown as T };
-    } else {
-      return { success: false, data: {} as T, error: "Failed to insert document" };
-    }
-  } catch (error) {
-    console.error("Error in insertData:", error);
-    toast({
-      title: "Database Error",
-      description: "Failed to add data to database. Please try again.",
-      variant: "destructive",
-    });
-    return { success: false, data: {} as T, error: (error as Error).message };
-  }
+  console.log(`Inserting data into collection: ${collectionName}`, data);
+  
+  // In browser environment, simulate successful insert
+  return { success: true, data: { ...data, _id: 'mock-id-' + Date.now() } as unknown as T };
 }
 
 // Mock data for UI development or when collections are empty
