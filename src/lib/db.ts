@@ -1,5 +1,3 @@
-import { MongoClient, Collection, Db } from "mongodb";
-import { toast } from "@/components/ui/use-toast";
 
 // Define response interface
 export interface ApiResponse<T> {
@@ -8,56 +6,27 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-// Connection string - in a production environment, this should be in a secure backend
-const CONNECTION_STRING = "mongodb+srv://dev-user:m9P0sg4D2d6M538J@oyecreators-8d327e59.mongo.ondigitalocean.com/oyecreators-lovable?tls=true&authSource=admin&replicaSet=oyecreators";
-
-// Create MongoDB client
-let client: MongoClient | null = null;
-let db: Db | null = null;
-
-// Initialize MongoDB connection
-async function connectToDatabase(): Promise<{ client: MongoClient; db: Db } | null> {
-  if (client && db) {
-    return { client, db };
-  }
-  
-  try {
-    if (!client) {
-      client = new MongoClient(CONNECTION_STRING);
-      await client.connect();
-      console.log("Connected to MongoDB successfully");
-    }
-    
-    db = client.db("oyecreators-lovable");
-    return { client, db };
-  } catch (error) {
-    console.error("Failed to connect to MongoDB:", error);
-    toast({
-      title: "Database Error",
-      description: "Failed to connect to the database. Please try again.",
-      variant: "destructive",
-    });
-    return null;
-  }
-}
-
-// Function to fetch data - in browser environment, return mock data
+// Function to fetch data - returns mock data
 export async function fetchData<T>(collectionName: string): Promise<ApiResponse<T>> {
-  console.log(`Fetching data from collection: ${collectionName}`);
+  console.log(`Fetching mock data for: ${collectionName}`);
   
-  // In browser environment, always return mock data
+  // Simulate a small delay to mimic network request
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
   return { success: true, data: getMockData(collectionName) as T };
 }
 
-// Function to insert data - in browser environment, simulate success
+// Function to insert data - simulates successful insert
 export async function insertData<T>(collectionName: string, data: any): Promise<ApiResponse<T>> {
-  console.log(`Inserting data into collection: ${collectionName}`, data);
+  console.log(`Inserting mock data into: ${collectionName}`, data);
   
-  // In browser environment, simulate successful insert
+  // Simulate a small delay to mimic network request
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
   return { success: true, data: { ...data, _id: 'mock-id-' + Date.now() } as unknown as T };
 }
 
-// Mock data for UI development or when collections are empty
+// Mock data for UI development
 function getMockData(endpoint: string) {
   switch (endpoint) {
     case "dashboard":
@@ -94,15 +63,5 @@ function getMockData(endpoint: string) {
       };
     default:
       return [];
-  }
-}
-
-// Function to close the MongoDB connection
-export async function closeConnection() {
-  if (client) {
-    await client.close();
-    client = null;
-    db = null;
-    console.log("MongoDB connection closed");
   }
 }

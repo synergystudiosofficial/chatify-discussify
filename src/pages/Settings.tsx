@@ -4,13 +4,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
   FormLabel,
-  FormMessage
+  FormDescription
 } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
@@ -81,22 +76,10 @@ export default function Settings() {
               <CardHeader>
                 <CardTitle>API Configuration</CardTitle>
                 <CardDescription>
-                  Configure your MongoDB connection and API settings.
+                  Configure your API settings.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <FormLabel htmlFor="connection-string">MongoDB Connection String</FormLabel>
-                  <Input 
-                    id="connection-string" 
-                    defaultValue="mongodb+srv://dev-user:******@oyecreators-8d327e59.mongo.ondigitalocean.com/oyecreators-lovable"
-                    type="password"
-                  />
-                  <FormDescription>
-                    Your database connection string (hidden for security).
-                  </FormDescription>
-                </div>
-                
                 <div className="space-y-2">
                   <FormLabel htmlFor="api-key">API Key</FormLabel>
                   <Input 
