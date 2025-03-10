@@ -1,3 +1,4 @@
+
 import { ApiResponse } from './db';
 
 // In a real application, this would make calls to a secure backend API
@@ -5,7 +6,13 @@ import { ApiResponse } from './db';
 
 const API_BASE_URL = '/api'; // This would point to your secure backend
 
-export async function fetchFromApi<T>(endpoint: string): Promise<ApiResponse<T>> {
+interface RequestOptions {
+  method?: string;
+  body?: string;
+  headers?: Record<string, string>;
+}
+
+export async function fetchFromApi<T>(endpoint: string, options?: RequestOptions): Promise<ApiResponse<T>> {
   try {
     // This simulates what a real API call would look like
     // In production, this would be an actual fetch to your backend
@@ -13,7 +20,7 @@ export async function fetchFromApi<T>(endpoint: string): Promise<ApiResponse<T>>
     
     // For now, we're using the mock data from db.ts
     // In a real app, this would be:
-    // const response = await fetch(`${API_BASE_URL}/${endpoint}`);
+    // const response = await fetch(`${API_BASE_URL}/${endpoint}`, options);
     // const data = await response.json();
     // return data;
     
