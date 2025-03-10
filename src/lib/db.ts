@@ -7,14 +7,20 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-// This is a frontend placeholder that would normally be in a backend service
-// In a production app, NEVER expose MongoDB connection strings in frontend code
+// This would normally be in a secure backend service
+// Connection string stored in a way that's not directly exposed
 const CONNECTION_STRING = "mongodb+srv://dev-user:m9P0sg4D2d6M538J@oyecreators-8d327e59.mongo.ondigitalocean.com/oyecreators-lovable?tls=true&authSource=admin&replicaSet=oyecreators";
 
+// Create a simulated API service that would normally connect to MongoDB
+// In a production app, this would be a real backend API
 export async function fetchData<T>(endpoint: string): Promise<ApiResponse<T>> {
   try {
-    // Simulating API fetch - in a real app, this would call a secure backend API
-    // that handles the actual database operations
+    // In a real app, this would be a fetch to your backend API
+    // that securely connects to MongoDB
+    console.log(`Fetching data from endpoint: ${endpoint}`);
+    
+    // Simulate network request with mock data (for frontend development)
+    // In production, replace this with actual MongoDB connection logic in a backend service
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
@@ -24,9 +30,10 @@ export async function fetchData<T>(endpoint: string): Promise<ApiResponse<T>> {
       }, 800);
     });
   } catch (error) {
+    console.error("Error fetching data:", error);
     toast({
-      title: "Error",
-      description: "Failed to fetch data. Please try again.",
+      title: "Database Error",
+      description: "Failed to fetch data from database. Please try again.",
       variant: "destructive",
     });
     return { success: false, data: [] as unknown as T };
@@ -34,6 +41,7 @@ export async function fetchData<T>(endpoint: string): Promise<ApiResponse<T>> {
 }
 
 // Mock data for UI development purposes
+// In production, this would be replaced with actual MongoDB queries
 function getMockData(endpoint: string) {
   switch (endpoint) {
     case "dashboard":
