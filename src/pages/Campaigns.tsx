@@ -4,7 +4,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { fetchData } from "@/lib/db";
+import { fetchData, ApiResponse } from "@/lib/db";
 import { 
   Table, 
   TableBody, 
@@ -35,9 +35,9 @@ export default function Campaigns() {
 
   useEffect(() => {
     const loadCampaignsData = async () => {
-      const response = await fetchData("campaigns");
+      const response = await fetchData<CampaignsData>("campaigns");
       if (response.success) {
-        setCampaignsData(response.data as CampaignsData);
+        setCampaignsData(response.data);
       }
       setLoading(false);
     };

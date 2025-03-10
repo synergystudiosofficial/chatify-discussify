@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { fetchData } from "@/lib/db";
+import { fetchData, ApiResponse } from "@/lib/db";
 import { 
   Table, 
   TableBody, 
@@ -31,9 +31,9 @@ export default function Index() {
 
   useEffect(() => {
     const loadDashboardData = async () => {
-      const response = await fetchData("dashboard");
+      const response = await fetchData<DashboardData>("dashboard");
       if (response.success) {
-        setDashboardData(response.data as DashboardData);
+        setDashboardData(response.data);
       }
       setLoading(false);
     };

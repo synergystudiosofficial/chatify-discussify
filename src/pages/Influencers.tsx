@@ -4,7 +4,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
-import { fetchData } from "@/lib/db";
+import { fetchData, ApiResponse } from "@/lib/db";
 import { Input } from "@/components/ui/input";
 import { 
   Table, 
@@ -37,9 +37,9 @@ export default function Influencers() {
 
   useEffect(() => {
     const loadInfluencersData = async () => {
-      const response = await fetchData("influencers");
+      const response = await fetchData<InfluencersData>("influencers");
       if (response.success) {
-        setInfluencersData(response.data as InfluencersData);
+        setInfluencersData(response.data);
       }
       setLoading(false);
     };

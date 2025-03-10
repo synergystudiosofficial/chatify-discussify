@@ -1,11 +1,17 @@
 
 import { toast } from "@/components/ui/use-toast";
 
+// Define response interface
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+}
+
 // This is a frontend placeholder that would normally be in a backend service
 // In a production app, NEVER expose MongoDB connection strings in frontend code
 const CONNECTION_STRING = "mongodb+srv://dev-user:m9P0sg4D2d6M538J@oyecreators-8d327e59.mongo.ondigitalocean.com/oyecreators-lovable?tls=true&authSource=admin&replicaSet=oyecreators";
 
-export async function fetchData(endpoint: string) {
+export async function fetchData<T>(endpoint: string): Promise<ApiResponse<T>> {
   try {
     // Simulating API fetch - in a real app, this would call a secure backend API
     // that handles the actual database operations
@@ -13,7 +19,7 @@ export async function fetchData(endpoint: string) {
       setTimeout(() => {
         resolve({
           success: true,
-          data: getMockData(endpoint)
+          data: getMockData(endpoint) as T
         });
       }, 800);
     });
@@ -23,7 +29,7 @@ export async function fetchData(endpoint: string) {
       description: "Failed to fetch data. Please try again.",
       variant: "destructive",
     });
-    return { success: false, data: [] };
+    return { success: false, data: [] as unknown as T };
   }
 }
 

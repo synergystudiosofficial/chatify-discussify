@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { fetchData } from "@/lib/db";
+import { fetchData, ApiResponse } from "@/lib/db";
 import { useToast } from "@/components/ui/use-toast";
 
 export function useAdminData<T>(endpoint: string) {
@@ -9,36 +9,36 @@ export function useAdminData<T>(endpoint: string) {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetchData(endpoint);
-        if (response.success) {
-          setData(response.data as T);
-          setError(null);
-        } else {
-          setError("Failed to fetch data");
-          toast({
-            title: "Error",
-            description: "Failed to fetch data. Please try again.",
-            variant: "destructive",
-          });
-        }
-      } catch (err) {
-        setError("An unexpected error occurred");
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetchData<T>(endpoint);
+      if (response.success) {
+        setData(response.data);
+        setError(null);
+      } else {
+        setError("Failed to fetch data");
         toast({
           title: "Error",
-          description: "An unexpected error occurred. Please try again.",
+          description: "Failed to fetch data. Please try again.",
           variant: "destructive",
         });
-      } finally {
-        setLoading(false);
       }
-    };
-    
-    loadData();
-  }, [endpoint, toast]);
+    } catch (err) {
+      setError("An unexpected error occurred");
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  return { data, loading, error, refetch: () => loadData() };
+  useEffect(() => {
+    loadData();
+  }, [endpoint]);
+
+  return { data, loading, error, refetch: loadData };
 }
